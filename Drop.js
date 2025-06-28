@@ -15,6 +15,8 @@ export default class Drop {
 
         this.size = 4.1;
 
+        this.isGrowing = true;
+
         const color1 = p.color(0, 41, 35);
         const color2 = p.color(255, 255, 238);
 
@@ -49,18 +51,40 @@ export default class Drop {
         }
     }
 
-    update(drop, p5) {
+    update(drops, p5) {
         const easing = 0.05;
         let dx = this.r - this.size;
         this.size += dx * easing;
 
-        // Recalculate verts based on new size
+        // recalculate verts based on current size
         for (let i = 0; i < this.verts.length; i++) {
             let angle = p5.map(i, 0, this.verts.length, 0, p5.TWO_PI);
             let v = p5.createVector(p5.cos(angle), p5.sin(angle));
             v.mult(this.size);
             v.add(this.x, this.y);
+
+            // apply marble to this vertex with respect to other drops
+            for (let other of drops) {
+                if (other === this) continue;
+
+                let c = other.center;
+                let r = other.size;
+
+                let p = v.copy().sub(c);
+                let m = p.mag();
+                if (m > 0) {
+                    let root = p5.sqrt(1 + (r * r) / (m * m));
+                    p.mult(root);
+                    p.add(c);
+                    v.set(p);
+                }
+            }
+
             this.verts[i] = v;
+        }
+
+        if (this.size > this.r * 0.95) {
+            this.isGrowing = false;
         }
     }
 

@@ -13,16 +13,16 @@ new p5((p) => {
         p.background(220);
         for (let drop of drops) {
             drop.show(p);
-            drop.update(drop, p);
+            drop.update(drops, p);
         }
     };
 
     p.mousePressed = () => {
         let drop = new Drop(p.mouseX, p.mouseY, 50, p);
 
-        for (let other of drops) {
-            other.marble(drop, p);
-        }
+        // for (let other of drops) {
+        //     other.marble(drop, p);
+        // }
 
         drops.push(drop);
     };
