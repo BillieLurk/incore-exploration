@@ -13,9 +13,9 @@ let normalVectors = [];
 
 let direction = new THREE.Vector3(0, 0, 0).normalize();
 
-const rng = seedrandom("my-seed-string6");
-
-let noise2D = createNoise2D();
+let rng = THREE.MathUtils.randInt(0, 10000000);
+console.log("the seed is", rng);
+let noise2D = createNoise2D(rng);
 
 const clock = new THREE.Clock();
 
