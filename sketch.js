@@ -144,16 +144,16 @@ function init() {
     normalVectors = computeGridNormals(curves);
 
     // Visualize normal vectors on the first edge curve points
-    const verticalVectorsGroup = visualizeVectors(
-        edgeCurves[0],
-        edgeCurves[1],
-        verticalVectors,
-        horizontalVectors,
-        normalVectors,
-        0.5,
-        0xff0000,
-    );
-    scene.add(verticalVectorsGroup);
+    // const verticalVectorsGroup = visualizeVectors(
+    //     edgeCurves[0],
+    //     edgeCurves[1],
+    //     verticalVectors,
+    //     horizontalVectors,
+    //     normalVectors,
+    //     0.5,
+    //     0xff0000,
+    // );
+    // scene.add(verticalVectorsGroup);
 
     scene.add(shape);
 }
@@ -299,10 +299,10 @@ window.addEventListener("keydown", (e) => {
 function animate() {
     requestAnimationFrame(animate);
 
-    const elapsedTime = clock.getElapsedTime(); // in seconds
-    const progress = elapsedTime * 0.01; // adjust speed to taste
+    const elapsedTime = clock.getElapsedTime();
+    const progress = elapsedTime * 0.005;
 
-    // regenerate pointsArray for current time
+    // 1. Regenerate pointsArray for current time
     const updatedPointsArray = generatePointsArray(
         -5,
         4,
@@ -311,20 +311,46 @@ function animate() {
         progress,
     );
 
-    updatedPointsArray.forEach((points, index) => {
+    // 2. Build a 2D array of curvePoints (each line has 1001 points with getPoints(1000))
+    const allCurvePoints = updatedPointsArray.map((points) => {
         const curve = new THREE.CatmullRomCurve3(points);
-        const curvePoints = curve.getPoints(1000);
-
-        // update the existing curve object’s geometry
-        if (curves[index]) {
-            curves[index].curveObject.geometry.setFromPoints(curvePoints);
-            curves[index].curveObject.geometry.attributes.position.needsUpdate =
-                true;
-
-            // also update its `points` so you keep things in sync
-            curves[index].points = points;
-        }
+        return curve.getPoints(1000);
     });
+
+    // 4. Displace each point along its normal using noise2D
+    let normalIndex = 0;
+    for (let lineIndex = 0; lineIndex < allCurvePoints.length; lineIndex++) {
+        const curvePoints = allCurvePoints[lineIndex];
+        for (
+            let pointIndex = 0;
+            pointIndex < curvePoints.length;
+            pointIndex++
+        ) {
+            const point = curvePoints[pointIndex];
+            const normal = normalVectors[normalIndex];
+
+            // Displacement based on noise2D
+            const noiseVal = noise2D(point.x * 1.3, progress + point.z * 1.3);
+            const displacementStrength = 0.2;
+            point.addScaledVector(normal, noiseVal * displacementStrength);
+
+            normalIndex++;
+        }
+    }
+
+    // 5. Update the geometry of each curve object with the displaced points
+    for (let lineIndex = 0; lineIndex < curves.length; lineIndex++) {
+        if (curves[lineIndex]) {
+            curves[lineIndex].curveObject.geometry.setFromPoints(
+                allCurvePoints[lineIndex],
+            );
+            curves[
+                lineIndex
+            ].curveObject.geometry.attributes.position.needsUpdate = true;
+            // Optionally, keep points in sync if needed:
+            // curves[lineIndex].points = updatedPointsArray[lineIndex];
+        }
+    }
 
     controls.update();
     renderer.render(scene, camera);
