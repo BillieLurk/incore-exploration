@@ -11,7 +11,7 @@ let edgeCurves = [];
 
 let normalVectors = [];
 
-let direction = new THREE.Vector3(1, 0.6, 0).normalize();
+let direction = new THREE.Vector3(0, 0, 0).normalize();
 
 const rng = seedrandom("my-seed-string6");
 
@@ -34,7 +34,7 @@ function init() {
         0.1,
         1000,
     );
-    camera.position.set(0, 0, 2);
+    camera.position.set(0, 4, 0);
 
     // renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -70,6 +70,21 @@ function init() {
         }
         return twoCurves;
     }
+
+    function generateStrip(width, length) {
+        const curve1 = [
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(length, 0, 0),
+        ];
+        const curve2 = [
+            new THREE.Vector3(0, width, 0),
+            new THREE.Vector3(length, width, 0),
+        ];
+
+        return [curve1, curve2];
+    }
+
+    // const [points1, points2] = generateStrip(3, 10);
 
     const [points1, points2] = generatePoints(-5, 4, 5);
 
@@ -260,31 +275,15 @@ function animate() {
 
     const time = elapsedTime / 10;
 
-    // for (let index = 0; index < curves.length; index++) {
-    //     const { curveObject, points, basePoints } = curves[index];
-    //     const phaseOffset = index * 0.2;
-    //
-    //     for (let i = 1; i < points.length - 1; i++) {
-    //         points[i].y =
-    //             basePoints[i].y + Math.sin(time + i + phaseOffset) * 0.1;
-    //     }
-    //
-    //     const newCurve = new THREE.CatmullRomCurve3(points);
-    //     const newPoints = newCurve.getPoints(1000);
-    //     curveObject.geometry.setFromPoints(newPoints);
-    //     curveObject.geometry.attributes.position.needsUpdate = true;
-    // }
-
     for (let index = 0; index < curves.length; index++) {
         const { curveObject, points, basePoints } = curves[index];
         const phaseOffset = index * 0.2;
 
         const newCurve = new THREE.CatmullRomCurve3(points);
         const newPoints = newCurve.getPoints(1000);
-
         const aspect = curves.length / newPoints.length;
-        const scale = 0.02;
-        const strength = 1;
+        const scale = 0.009;
+        const strength = 0.4;
 
         for (let i = 0; i < newPoints.length; i++) {
             newPoints[i].add(
@@ -302,10 +301,46 @@ function animate() {
             );
         }
 
-        // (1 + Math.sin(i / 100 + time + index * 0.1)) / 10,
+        //     for (let i = 1; i < points.length - 1; i++) {
+        //         points[i].y =
+        //             basePoints[i].y + Math.sin(time + i + phaseOffset) * 0.1;
+        //     }
+
         curveObject.geometry.setFromPoints(newPoints);
         curveObject.geometry.attributes.position.needsUpdate = true;
     }
+
+    // for (let index = 0; index < curves.length; index++) {
+    //     const { curveObject, points, basePoints } = curves[index];
+    //     const phaseOffset = index * 0.2;
+    //
+    //     const newCurve = new THREE.CatmullRomCurve3(points);
+    //     const newPoints = newCurve.getPoints(1000);
+    //
+    //     const aspect = curves.length / newPoints.length;
+    //     const scale = 0.009;
+    //     const strength = 0.4;
+    //
+    //     for (let i = 0; i < newPoints.length; i++) {
+    //         newPoints[i].add(
+    //             normalVectors[i]
+    //                 .normalize()
+    //                 .multiplyScalar(
+    //                     (1 +
+    //                         noise2D(
+    //                             i * aspect * scale +
+    //                                 (Math.sin(direction.x) * time) / 3,
+    //                             index * scale + Math.cos(direction.y) * time,
+    //                         )) *
+    //                         strength,
+    //                 ),
+    //         );
+    //     }
+    //
+    //     // (1 + Math.sin(i / 100 + time + index * 0.1)) / 10,
+    //     curveObject.geometry.setFromPoints(newPoints);
+    //     curveObject.geometry.attributes.position.needsUpdate = true;
+    // }
 
     controls.update();
     renderer.render(scene, camera);
