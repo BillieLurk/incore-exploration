@@ -347,7 +347,7 @@ function animate() {
             // Displacement based on noise2D
             const noiseVal =
                 fractalNoise(point.x - progress / 2, point.z, 4) +
-                noise2D((point.x - progress * 3) * 0.4, point.z * 0.4) * 2;
+                noise2D((point.x - progress * 3) * 0.4, point.z * 0.5) * 3;
             const displacementStrength = 0.1;
             point.addScaledVector(normal, noiseVal * displacementStrength);
 
