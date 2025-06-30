@@ -10,7 +10,8 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "p5": "^2.0.3"
+        "p5": "^2.0.3",
+        "three": "^0.177.0"
     },
     "devDependencies": {
         "@types/p5": "^1.7.6",
