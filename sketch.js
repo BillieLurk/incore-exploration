@@ -18,6 +18,8 @@ console.log("the seed is", seed);
 
 const curvCount = 150;
 
+let pointsArray = [];
+
 let seededRandom = seedrandom(seed);
 
 let noise2D = createNoise2D(seededRandom);
@@ -38,8 +40,12 @@ function generatePointsArray(xStart, xEnd, numPoints, curvCount, progress = 0) {
         twoCurves.push(points);
     }
 
-    const points1 = twoCurves[0];
-    const points2 = twoCurves[1];
+    // const points1 = twoCurves[0];
+    // const points2 = twoCurves[1];
+
+    const points1 = [new THREE.Vector3(-5, 0, -1), new THREE.Vector3(5, 0, -1)];
+    const points2 = [new THREE.Vector3(-5, 0, 1), new THREE.Vector3(5, 0, 1)];
+
     const pointsArray = [points1];
 
     // Generate interpolated curves
@@ -65,7 +71,7 @@ function init() {
     // scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
-    scene.fog = new THREE.Fog(new THREE.Color(0xffffff), 0, 12);
+    scene.fog = new THREE.Fog(new THREE.Color(0xffffff), 0, 4);
     // camera
     camera = new THREE.PerspectiveCamera(
         60,
@@ -73,7 +79,7 @@ function init() {
         0.1,
         1000,
     );
-    camera.position.set(0, 0, 4);
+    camera.position.set(0, 0.2, 3);
 
     // renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -90,7 +96,7 @@ function init() {
 
     const shape = new THREE.Group();
 
-    const pointsArray = generatePointsArray(-5, 4, 5, curvCount);
+    pointsArray = generatePointsArray(-5, 4, 5, curvCount);
 
     pointsArray.forEach((points, index) => {
         const curve = new THREE.CatmullRomCurve3(points);
@@ -155,6 +161,7 @@ function init() {
     // );
     // scene.add(verticalVectorsGroup);
 
+    shape.rotation.z = THREE.MathUtils.degToRad(10);
     scene.add(shape);
 }
 
@@ -314,16 +321,10 @@ function animate() {
     requestAnimationFrame(animate);
 
     const elapsedTime = clock.getElapsedTime();
-    const progress = elapsedTime * 0.005;
+    const progress = elapsedTime * 0.05;
 
     // 1. Regenerate pointsArray for current time
-    const updatedPointsArray = generatePointsArray(
-        -5,
-        4,
-        5,
-        curvCount,
-        progress,
-    );
+    const updatedPointsArray = pointsArray;
 
     // 2. Build a 2D array of curvePoints (each line has 1001 points with getPoints(1000))
     const allCurvePoints = updatedPointsArray.map((points) => {
@@ -344,8 +345,10 @@ function animate() {
             const normal = normalVectors[normalIndex];
 
             // Displacement based on noise2D
-            const noiseVal = fractalNoise(point.x, progress + point.z, 4);
-            const displacementStrength = 0.2;
+            const noiseVal =
+                fractalNoise(point.x - progress / 2, point.z, 4) +
+                noise2D((point.x - progress * 3) * 0.4, point.z * 0.4) * 2;
+            const displacementStrength = 0.1;
             point.addScaledVector(normal, noiseVal * displacementStrength);
 
             normalIndex++;
