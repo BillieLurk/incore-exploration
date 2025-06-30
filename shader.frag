@@ -41,7 +41,7 @@ float perlin2d(vec2 p)
 void main()
 {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-    float m = sin(perlin2d(( uv + u_pan )) * PI * 10.0 - u_time) - 0.97;
+    float m = sin(perlin2d(( uv + u_pan )) * PI * 10.0 + u_time) - 0.7;
     float a = 0.01;
     float t = 0.02;
     m = smoothstep(a, a + t, m);
