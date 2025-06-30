@@ -296,6 +296,20 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
+function fractalNoise(x, y, octaves = 4, persistence = 0.5, lacunarity = 2.0) {
+    let total = 0;
+    let frequency = 1;
+    let amplitude = 1;
+    let maxValue = 0;
+    for (let i = 0; i < octaves; i++) {
+        total += noise2D(x * frequency, y * frequency) * amplitude;
+        maxValue += amplitude;
+        amplitude *= persistence;
+        frequency *= lacunarity;
+    }
+    return total / maxValue;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -330,7 +344,7 @@ function animate() {
             const normal = normalVectors[normalIndex];
 
             // Displacement based on noise2D
-            const noiseVal = noise2D(point.x * 1.3, progress + point.z * 1.3);
+            const noiseVal = fractalNoise(point.x, progress + point.z, 4);
             const displacementStrength = 0.2;
             point.addScaledVector(normal, noiseVal * displacementStrength);
 
