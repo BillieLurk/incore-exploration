@@ -16,11 +16,47 @@ let direction = new THREE.Vector3(0, 0, 0).normalize();
 let seed = THREE.MathUtils.randInt(0, 10000000);
 console.log("the seed is", seed);
 
+const curvCount = 150;
+
 let seededRandom = seedrandom(seed);
 
 let noise2D = createNoise2D(seededRandom);
 
 const clock = new THREE.Clock();
+
+function generatePointsArray(xStart, xEnd, numPoints, curvCount, progress = 0) {
+    // Generate initial two curves
+    const twoCurves = [];
+    for (let o = 0; o < 2; o++) {
+        const points = [];
+        for (let i = 0; i < numPoints; i++) {
+            const x = THREE.MathUtils.lerp(xStart, xEnd, i / (numPoints - 1));
+            const y = noise2D(x * 0.5, 10 * o + progress) * 3;
+            const z = noise2D(x * 0.5, 100 * o + progress) * 3;
+            points.push(new THREE.Vector3(x, y, z));
+        }
+        twoCurves.push(points);
+    }
+
+    const points1 = twoCurves[0];
+    const points2 = twoCurves[1];
+    const pointsArray = [points1];
+
+    // Generate interpolated curves
+    for (let i = 1; i < curvCount - 1; i++) {
+        const deltaPoints = [];
+        for (let o = 0; o < points1.length; o++) {
+            const delta = points2[o].clone().sub(points1[o]);
+            const dist = delta.divideScalar(curvCount - 1);
+            const normalized = dist.multiplyScalar(i).add(points1[o]);
+            deltaPoints.push(normalized);
+        }
+        pointsArray.push(deltaPoints);
+    }
+
+    pointsArray.push(points2);
+    return pointsArray;
+}
 
 init();
 animate();
@@ -53,51 +89,6 @@ function init() {
     });
 
     const shape = new THREE.Group();
-    const curvCount = 150;
-
-    function generatePointsArray(
-        xStart,
-        xEnd,
-        numPoints,
-        curvCount,
-        progress = 0,
-    ) {
-        // Generate initial two curves
-        const twoCurves = [];
-        for (let o = 0; o < 2; o++) {
-            const points = [];
-            for (let i = 0; i < numPoints; i++) {
-                const x = THREE.MathUtils.lerp(
-                    xStart,
-                    xEnd,
-                    i / (numPoints - 1),
-                );
-                const y = noise2D(x * 0.5, 10 * o + progress) * 3;
-                const z = noise2D(x * 0.5, 100 * o + progress) * 3;
-                points.push(new THREE.Vector3(x, y, z));
-            }
-            twoCurves.push(points);
-        }
-
-        const points1 = twoCurves[0];
-        const points2 = twoCurves[1];
-        const pointsArray = [points1];
-
-        // Generate interpolated curves
-        for (let i = 1; i < curvCount - 1; i++) {
-            const deltaPoints = [];
-            for (let o = 0; o < points1.length; o++) {
-                const delta = points2[o].clone().sub(points1[o]);
-                const dist = delta.divideScalar(curvCount - 1);
-                const normalized = dist.multiplyScalar(i).add(points1[o]);
-                deltaPoints.push(normalized);
-            }
-            pointsArray.push(deltaPoints);
-        }
-
-        pointsArray.push(points2);
-        return pointsArray;
-    }
 
     const pointsArray = generatePointsArray(-5, 4, 5, curvCount);
 
@@ -269,67 +260,33 @@ window.addEventListener("keydown", (e) => {
 
 function animate() {
     requestAnimationFrame(animate);
+
     const elapsedTime = clock.getElapsedTime(); // in seconds
+    const progress = elapsedTime * 0.01; // adjust speed to taste
 
-    const time = elapsedTime / 10;
+    // regenerate pointsArray for current time
+    const updatedPointsArray = generatePointsArray(
+        -5,
+        4,
+        5,
+        curvCount,
+        progress,
+    );
 
-    for (let index = 0; index < curves.length; index++) {
-        const { curveObject, points, basePoints } = curves[index];
-        const phaseOffset = index * 0.2;
+    updatedPointsArray.forEach((points, index) => {
+        const curve = new THREE.CatmullRomCurve3(points);
+        const curvePoints = curve.getPoints(1000);
 
-        const newCurve = new THREE.CatmullRomCurve3(points);
-        const newPoints = newCurve.getPoints(1000);
-        const aspect = curves.length / newPoints.length;
-        const scale = 0.009;
-        const strength = 0.4;
+        // update the existing curve object’s geometry
+        if (curves[index]) {
+            curves[index].curveObject.geometry.setFromPoints(curvePoints);
+            curves[index].curveObject.geometry.attributes.position.needsUpdate =
+                true;
 
-        for (let i = 0; i < points.length; i++) {
-            points[i].y =
-                basePoints[i].y +
-                Math.sin(time * 3 + i + phaseOffset) * 0.03 +
-                Math.cos(time * 4 + i * 2) * 0.3;
+            // also update its `points` so you keep things in sync
+            curves[index].points = points;
         }
-
-        //     for (let i = 1; i < points.length - 1; i++) {
-        //         points[i].y =
-        //             basePoints[i].y + Math.sin(time + i + phaseOffset) * 0.1;
-        //     }
-
-        curveObject.geometry.setFromPoints(newPoints);
-        curveObject.geometry.attributes.position.needsUpdate = true;
-    }
-
-    // for (let index = 0; index < curves.length; index++) {
-    //     const { curveObject, points, basePoints } = curves[index];
-    //     const phaseOffset = index * 0.2;
-    //
-    //     const newCurve = new THREE.CatmullRomCurve3(points);
-    //     const newPoints = newCurve.getPoints(1000);
-    //
-    //     const aspect = curves.length / newPoints.length;
-    //     const scale = 0.009;
-    //     const strength = 0.4;
-    //
-    //     for (let i = 0; i < newPoints.length; i++) {
-    //         newPoints[i].add(
-    //             normalVectors[i]
-    //                 .normalize()
-    //                 .multiplyScalar(
-    //                     (1 +
-    //                         noise2D(
-    //                             i * aspect * scale +
-    //                                 (Math.sin(direction.x) * time) / 3,
-    //                             index * scale + Math.cos(direction.y) * time,
-    //                         )) *
-    //                         strength,
-    //                 ),
-    //         );
-    //     }
-    //
-    //     // (1 + Math.sin(i / 100 + time + index * 0.1)) / 10,
-    //     curveObject.geometry.setFromPoints(newPoints);
-    //     curveObject.geometry.attributes.position.needsUpdate = true;
-    // }
+    });
 
     controls.update();
     renderer.render(scene, camera);
