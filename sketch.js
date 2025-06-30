@@ -13,9 +13,12 @@ let normalVectors = [];
 
 let direction = new THREE.Vector3(0, 0, 0).normalize();
 
-let rng = THREE.MathUtils.randInt(0, 10000000);
-console.log("the seed is", rng);
-let noise2D = createNoise2D(rng);
+let seed = THREE.MathUtils.randInt(0, 10000000);
+console.log("the seed is", seed);
+
+let seededRandom = seedrandom(seed);
+
+let noise2D = createNoise2D(seededRandom);
 
 const clock = new THREE.Clock();
 
@@ -52,7 +55,14 @@ function init() {
     const shape = new THREE.Group();
     const curvCount = 150;
 
-    function generatePoints(xStart, xEnd, numPoints) {
+    function generatePointsArray(
+        xStart,
+        xEnd,
+        numPoints,
+        curvCount,
+        progress = 0,
+    ) {
+        // Generate initial two curves
         const twoCurves = [];
         for (let o = 0; o < 2; o++) {
             const points = [];
@@ -62,46 +72,34 @@ function init() {
                     xEnd,
                     i / (numPoints - 1),
                 );
-                const y = noise2D(x * 0.5, 10 * o) * 3;
-                const z = noise2D(x * 0.5, 100 * o) * 3;
+                const y = noise2D(x * 0.5, 10 * o + progress) * 3;
+                const z = noise2D(x * 0.5, 100 * o + progress) * 3;
                 points.push(new THREE.Vector3(x, y, z));
             }
             twoCurves.push(points);
         }
-        return twoCurves;
-    }
 
-    function generateStrip(width, length) {
-        const curve1 = [
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(length, 0, 0),
-        ];
-        const curve2 = [
-            new THREE.Vector3(0, width, 0),
-            new THREE.Vector3(length, width, 0),
-        ];
+        const points1 = twoCurves[0];
+        const points2 = twoCurves[1];
+        const pointsArray = [points1];
 
-        return [curve1, curve2];
-    }
-
-    // const [points1, points2] = generateStrip(3, 10);
-
-    const [points1, points2] = generatePoints(-5, 4, 5);
-
-    let pointsArray = [points1];
-
-    for (let i = 1; i < curvCount - 1; i++) {
-        let deltaPoints = [];
-        for (let o = 0; o < points1.length; o++) {
-            const delta = points2[o].clone().sub(points1[o]);
-            const dist = delta.divideScalar(curvCount - 1);
-            const normalized = dist.multiplyScalar(i).add(points1[o]);
-            deltaPoints.push(normalized);
+        // Generate interpolated curves
+        for (let i = 1; i < curvCount - 1; i++) {
+            const deltaPoints = [];
+            for (let o = 0; o < points1.length; o++) {
+                const delta = points2[o].clone().sub(points1[o]);
+                const dist = delta.divideScalar(curvCount - 1);
+                const normalized = dist.multiplyScalar(i).add(points1[o]);
+                deltaPoints.push(normalized);
+            }
+            pointsArray.push(deltaPoints);
         }
-        pointsArray.push(deltaPoints);
+
+        pointsArray.push(points2);
+        return pointsArray;
     }
 
-    pointsArray.push(points2);
+    const pointsArray = generatePointsArray(-5, 4, 5, curvCount);
 
     pointsArray.forEach((points, index) => {
         const curve = new THREE.CatmullRomCurve3(points);
