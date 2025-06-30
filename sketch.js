@@ -26,7 +26,7 @@ function init() {
     // scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
-    scene.fog = new THREE.Fog(new THREE.Color(0xffffff), 0, 10);
+    scene.fog = new THREE.Fog(new THREE.Color(0xffffff), 0, 12);
     // camera
     camera = new THREE.PerspectiveCamera(
         60,
@@ -34,7 +34,7 @@ function init() {
         0.1,
         1000,
     );
-    camera.position.set(0, 4, 0);
+    camera.position.set(0, 0, 4);
 
     // renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -285,20 +285,11 @@ function animate() {
         const scale = 0.009;
         const strength = 0.4;
 
-        for (let i = 0; i < newPoints.length; i++) {
-            newPoints[i].add(
-                normalVectors[i]
-                    .normalize()
-                    .multiplyScalar(
-                        (1 +
-                            noise2D(
-                                i * aspect * scale +
-                                    (Math.sin(direction.x) * time) / 3,
-                                index * scale + Math.cos(direction.y) * time,
-                            )) *
-                            strength,
-                    ),
-            );
+        for (let i = 0; i < points.length; i++) {
+            points[i].y =
+                basePoints[i].y +
+                Math.sin(time * 3 + i + phaseOffset) * 0.03 +
+                Math.cos(time * 4 + i * 2) * 0.3;
         }
 
         //     for (let i = 1; i < points.length - 1; i++) {
