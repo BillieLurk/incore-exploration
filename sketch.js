@@ -140,19 +140,20 @@ function init() {
 
     const verticalVectors = calcVerticalVector(edgeCurves);
     const horizontalVectors = calcHorizontalVector(edgeCurves);
-    normalVectors = calcNormalVector(verticalVectors, horizontalVectors);
+    // normalVectors = calcNormalVector(verticalVectors, horizontalVectors);
+    normalVectors = computeGridNormals(curves);
 
     // Visualize normal vectors on the first edge curve points
-    // const verticalVectorsGroup = visualizeVectors(
-    //     edgeCurves[0],
-    //     edgeCurves[1],
-    //     verticalVectors,
-    //     horizontalVectors,
-    //     normalVectors,
-    //     0.5,
-    //     0xff0000,
-    // );
-    // scene.add(verticalVectorsGroup);
+    const verticalVectorsGroup = visualizeVectors(
+        edgeCurves[0],
+        edgeCurves[1],
+        verticalVectors,
+        horizontalVectors,
+        normalVectors,
+        0.5,
+        0xff0000,
+    );
+    scene.add(verticalVectorsGroup);
 
     scene.add(shape);
 }
@@ -196,6 +197,43 @@ function calcNormalVector(vertical, horizontal) {
         dirVectors.push(dir);
     }
     return dirVectors;
+}
+
+function computeGridNormals(lines) {
+    const numLines = lines.length;
+    if (numLines === 0) return [];
+    const normals = [];
+
+    // Precompute all curvePoints arrays for each line
+    const allCurvePoints = lines.map((line) => {
+        const curve = new THREE.CatmullRomCurve3(line.points);
+        return curve.getPoints(1000);
+    });
+
+    const numPoints = allCurvePoints[0].length;
+
+    for (let i = 0; i < numLines; i++) {
+        const curvePoints = allCurvePoints[i];
+
+        for (let j = 0; j < numPoints; j++) {
+            // Find neighbor indices, clamped to grid
+            const iPrev = Math.max(i - 1, 0);
+            const iNext = Math.min(i + 1, numLines - 1);
+            const jPrev = Math.max(j - 1, 0);
+            const jNext = Math.min(j + 1, numPoints - 1);
+
+            const p = curvePoints[j];
+            const dx = allCurvePoints[iNext][j]
+                .clone()
+                .sub(allCurvePoints[iPrev][j]);
+            const dy = curvePoints[jNext].clone().sub(curvePoints[jPrev]);
+
+            // Normal is cross product of tangent vectors
+            const normal = new THREE.Vector3().crossVectors(dx, dy).normalize();
+            normals.push(normal);
+        }
+    }
+    return normals;
 }
 
 function visualizeVectors(
