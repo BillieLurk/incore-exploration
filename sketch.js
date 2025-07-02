@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createNoise2D } from "simplex-noise";
 import seedrandom from "seedrandom";
+import * as dat from "dat.gui";
 
 let scene, camera, renderer, controls;
 let waveOffset = 0;
@@ -92,6 +93,29 @@ function init() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Add GUI
+    const guiControls = {
+        backgroundColor: "#ffffff",
+        fogColor: "#ffffff",
+        lineColor: "#000000",
+    };
+
+    const gui = new dat.GUI();
+
+    gui.addColor(guiControls, "backgroundColor").onChange((value) => {
+        scene.background = new THREE.Color(value);
+    });
+
+    gui.addColor(guiControls, "fogColor").onChange((value) => {
+        scene.fog.color.set(value);
+    });
+
+    gui.addColor(guiControls, "lineColor").onChange((value) => {
+        curves.forEach((curve) => {
+            curve.curveObject.material.color.set(value);
+        });
     });
 
     const shape = new THREE.Group();
@@ -323,11 +347,8 @@ function animate() {
     const elapsedTime = clock.getElapsedTime();
     const progress = elapsedTime * 0.05;
 
-    // 1. Regenerate pointsArray for current time
-    const updatedPointsArray = pointsArray;
-
     // 2. Build a 2D array of curvePoints (each line has 1001 points with getPoints(1000))
-    const allCurvePoints = updatedPointsArray.map((points) => {
+    const allCurvePoints = pointsArray.map((points) => {
         const curve = new THREE.CatmullRomCurve3(points);
         return curve.getPoints(1000);
     });
@@ -365,7 +386,7 @@ function animate() {
                 lineIndex
             ].curveObject.geometry.attributes.position.needsUpdate = true;
             // Optionally, keep points in sync if needed:
-            // curves[lineIndex].points = updatedPointsArray[lineIndex];
+            // curves[lineIndex].points = pointsArray[lineIndex];
         }
     }
 
