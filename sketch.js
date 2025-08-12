@@ -71,8 +71,8 @@ animate();
 function init() {
     // scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
-    scene.fog = new THREE.Fog(new THREE.Color(0xffffff), 0, 4);
+    scene.background = new THREE.Color(0xf8f6f1);
+    scene.fog = new THREE.Fog(new THREE.Color(0xff9a42), 0, 4);
     // camera
     camera = new THREE.PerspectiveCamera(
         60,
@@ -97,9 +97,9 @@ function init() {
 
     // Add GUI
     const guiControls = {
-        backgroundColor: "#ffffff",
-        fogColor: "#ffffff",
-        lineColor: "#000000",
+        backgroundColor: "#F8F6F1",
+        fogColor: "#FF9A42",
+        lineColor: "#FF6344",
     };
 
     const gui = new dat.GUI();
@@ -140,7 +140,7 @@ function init() {
             curvePoints,
         );
         const curveMaterial = new THREE.LineBasicMaterial({
-            color: 0x000000,
+            color: 0xff6344,
             transparent: true,
             opacity: 0.5,
         });
@@ -319,14 +319,6 @@ function visualizeVectors(
     return group;
 }
 
-window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowUp") {
-        waveOffset += 0.1;
-    } else if (e.key === "ArrowDown") {
-        waveOffset -= 0.1;
-    }
-});
-
 function fractalNoise(x, y, octaves = 4, persistence = 0.5, lacunarity = 2.0) {
     let total = 0;
     let frequency = 1;
@@ -367,7 +359,7 @@ function animate() {
 
             // Displacement based on noise2D
             const noiseVal =
-                fractalNoise(point.x - progress / 2, point.z, 4) +
+                fractalNoise(point.x - progress / 2, point.z, 1) +
                 noise2D((point.x - progress * 3) * 0.4, point.z * 0.5) * 3;
             const displacementStrength = 0.1;
             point.addScaledVector(normal, noiseVal * displacementStrength);
