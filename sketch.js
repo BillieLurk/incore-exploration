@@ -96,27 +96,27 @@ function init() {
     });
 
     // Add GUI
-    const guiControls = {
-        backgroundColor: "#F8F6F1",
-        fogColor: "#FF9A42",
-        lineColor: "#FF6344",
-    };
-
-    const gui = new dat.GUI();
-
-    gui.addColor(guiControls, "backgroundColor").onChange((value) => {
-        scene.background = new THREE.Color(value);
-    });
-
-    gui.addColor(guiControls, "fogColor").onChange((value) => {
-        scene.fog.color.set(value);
-    });
-
-    gui.addColor(guiControls, "lineColor").onChange((value) => {
-        curves.forEach((curve) => {
-            curve.curveObject.material.color.set(value);
-        });
-    });
+    // const guiControls = {
+    //     backgroundColor: "#F8F6F1",
+    //     fogColor: "#FF9A42",
+    //     lineColor: "#FF6344",
+    // };
+    //
+    // const gui = new dat.GUI();
+    //
+    // gui.addColor(guiControls, "backgroundColor").onChange((value) => {
+    //     scene.background = new THREE.Color(value);
+    // });
+    //
+    // gui.addColor(guiControls, "fogColor").onChange((value) => {
+    //     scene.fog.color.set(value);
+    // });
+    //
+    // gui.addColor(guiControls, "lineColor").onChange((value) => {
+    //     curves.forEach((curve) => {
+    //         curve.curveObject.material.color.set(value);
+    //     });
+    // });
 
     const shape = new THREE.Group();
 
